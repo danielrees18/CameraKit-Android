@@ -5,7 +5,6 @@ import android.graphics.YuvImage;
 import android.hardware.Camera;
 import android.media.CamcorderProfile;
 import android.media.MediaRecorder;
-import android.os.Build;
 import android.os.Handler;
 import android.support.annotation.Nullable;
 import android.util.Log;
@@ -326,27 +325,25 @@ public class Camera1 extends CameraImpl {
         return result;
     }
 
-    // Code from SandriosCamera library
-    // https://github.com/sandrios/sandriosCamera/blob/master/sandriosCamera/src/main/java/com/sandrios/sandriosCamera/internal/manager/impl/Camera1Manager.java#L212
-    void initResolutions() {
-        List<Size> previewSizes = sizesFromList(mCameraParameters.getSupportedPreviewSizes());
-        List<Size> videoSizes = (Build.VERSION.SDK_INT > 10) ? sizesFromList(mCameraParameters.getSupportedVideoSizes()) : previewSizes;
-
-        CamcorderProfile camcorderProfile = getCamcorderProfile(mVideoQuality);
-
-        Size size = previewSizes.get(0);
-        for(int i = 0; i < previewSizes.size(); i++) {
-            if(previewSizes.get(i).getWidth() > size.getWidth()) {
-                size = previewSizes.get(i);
+    Size getLargestSize(List<Size> sizes) {
+        Size largestSize = sizes.get(0);
+        for (Size size : sizes) {
+            if (size.getWidth() > largestSize.getWidth()) {
+                largestSize = size;
             }
         }
-        mCaptureSize = size;
 
-//        mCaptureSize = getSizeWithClosestRatio(
-//                (videoSizes == null || videoSizes.isEmpty()) ? previewSizes : videoSizes,
-//                camcorderProfile.videoFrameWidth, camcorderProfile.videoFrameHeight);
+        return largestSize;
+    }
 
-        mPreviewSize = getSizeWithClosestRatio(previewSizes, mCaptureSize.getWidth(), mCaptureSize.getHeight());
+    void initResolutions() {
+        List<Size> previewSizes = sizesFromList(mCameraParameters.getSupportedPreviewSizes());
+        List<Size> captureSizes = sizesFromList(mCameraParameters.getSupportedPictureSizes());
+        List<Size> videoSizes = sizesFromList(mCameraParameters.getSupportedVideoSizes());
+        CamcorderProfile camcorderProfile = getCamcorderProfile(mVideoQuality);
+
+        mPreviewSize = getLargestSize(previewSizes);;
+        mCaptureSize = getSizeWithClosestRatio(captureSizes, mPreviewSize.getWidth(), mPreviewSize.getHeight());
     }
 
     @Override
