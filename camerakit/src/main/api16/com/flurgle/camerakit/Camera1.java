@@ -334,9 +334,17 @@ public class Camera1 extends CameraImpl {
 
         CamcorderProfile camcorderProfile = getCamcorderProfile(mVideoQuality);
 
-        mCaptureSize = getSizeWithClosestRatio(
-                (videoSizes == null || videoSizes.isEmpty()) ? previewSizes : videoSizes,
-                camcorderProfile.videoFrameWidth, camcorderProfile.videoFrameHeight);
+        Size size = previewSizes.get(0);
+        for(int i = 0; i < previewSizes.size(); i++) {
+            if(previewSizes.get(i).getWidth() > size.getWidth()) {
+                size = previewSizes.get(i);
+            }
+        }
+        mCaptureSize = size;
+
+//        mCaptureSize = getSizeWithClosestRatio(
+//                (videoSizes == null || videoSizes.isEmpty()) ? previewSizes : videoSizes,
+//                camcorderProfile.videoFrameWidth, camcorderProfile.videoFrameHeight);
 
         mPreviewSize = getSizeWithClosestRatio(previewSizes, mCaptureSize.getWidth(), mCaptureSize.getHeight());
     }
@@ -668,7 +676,11 @@ public class Camera1 extends CameraImpl {
                     camera.cancelAutoFocus();
                     Camera.Parameters params = camera.getParameters();
                     if (params.getFocusMode() != Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE) {
-                        params.setFocusMode(Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE);
+                        List<String> modes = params.getSupportedFocusModes();
+                        if (modes.contains(Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE)) {
+                            params.setFocusMode(Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE);
+                        }
+
                         params.setFocusAreas(null);
                         params.setMeteringAreas(null);
                         camera.setParameters(params);
